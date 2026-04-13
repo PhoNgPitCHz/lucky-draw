@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lucky Draw — Facebook Activity</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f13;
+    --surface: #18181f;
+    --surface2: #22222c;
+    --border: #2e2e3a;
+    --border2: #3e3e50;
+    --text: #e8e8f0;
+    --text2: #8888a8;
+    --text3: #55556a;
+    --accent: #7c6fcd;
+    --accent2: #a599e9;
+    --special: #f4a94e;
+    --lucky: #4ec9f4;
+    --reserve: #78d47e;
+    --danger: #f46e6e;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Sarabun', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── Layout ── */
+  .app { display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ── Nav ── */
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .nav-logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--accent2);
+    padding: 16px 16px 16px 0;
+    margin-right: 12px;
+    border-right: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .nav-btn {
+    background: none; border: none; cursor: pointer;
+    padding: 18px 16px;
+    font-family: 'Sarabun', sans-serif;
+    font-size: 14px;
+    color: var(--text2);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color .2s, border-color .2s;
+  }
+  .nav-btn:hover { color: var(--text); }
+  .nav-btn.active { color: var(--accent2); border-bottom-color: var(--accent2); }
+  .nav-spacer { flex: 1; }
+  .nav-status {
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text3);
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+  }
+  .nav-status.ready { color: var(--reserve); border-color: #78d47e44; }
+
+  /* ── Pages ── */
+  .page { display: none; padding: 32px 24px; max-width: 860px; margin: 0 auto; width: 100%; }
+  .page.active { display: block; }
+
+  /* ── Section card ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 16px;
+  }
+
+  /* ── Form elements ── */
+  label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 6px; margin-top: 14px; }
+  label:first-of-type { margin-top: 0; }
+  input[type=text], input[type=number], textarea, select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 14px;
+    padding: 10px 14px;
+    transition: border-color .2s;
+    outline: none;
+  }
+  input[type=text]:focus, input[type=number]:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+  }
+  textarea { resize: vertical; min-height: 80px; }
+  input[type=number] { width: 100%; text-align: center; }
+
+  /* ── Row/flex helpers ── */
+  .row { display: flex; gap: 12px; align-items: flex-start; }
+  .row input { flex: 1; }
+  .col { flex: 1; }
+
+  /* ── Divider ── */
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 12px; color: var(--text3); margin: 16px 0;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* ── Upload zone ── */
+  .upload-zone {
+    border: 1.5px dashed var(--border2);
+    border-radius: var(--radius);
+    padding: 28px;
+    text-align: center;
+    color: var(--text3);
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    background: var(--surface2);
+  }
+  .upload-zone:hover { border-color: var(--accent); color: var(--text2); }
+  .upload-zone.has-file { border-color: var(--reserve); color: var(--reserve); }
+  .upload-zone input { display: none; }
+  .upload-icon { font-size: 28px; margin-bottom: 8px; display: block; }
+
+  /* ── Method cards ── */
+  .method-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+  .method-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    background: var(--surface2);
+  }
+  .method-card:hover { border-color: var(--border2); }
+  .method-card.selected { border-color: var(--accent); background: #7c6fcd11; }
+  .method-card .m-icon { font-size: 22px; margin-bottom: 8px; display: block; }
+  .method-card .m-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .method-card .m-desc { font-size: 11px; color: var(--text3); line-height: 1.5; }
+  .method-card.selected .m-desc { color: var(--text2); }
+
+  /* ── Answer box ── */
+  .answer-box {
+    margin-top: 12px;
+    padding: 14px;
+    background: #7c6fcd11;
+    border: 1px solid #7c6fcd44;
+    border-radius: var(--radius);
+    display: none;
+  }
+  .answer-box.show { display: block; }
+  .answer-box label { color: var(--accent2); margin-top: 0; }
+
+  /* ── Buttons ── */
+  .btn {
+    padding: 10px 20px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background .2s, border-color .2s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--surface2); }
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  .btn-primary:hover { background: var(--accent2); border-color: var(--accent2); }
+  .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .btn-danger { border-color: #f46e6e44; color: var(--danger); }
+  .btn-danger:hover { background: #f46e6e11; }
+  .btn-export {
+    background: #4ec9f411;
+    border-color: #4ec9f444;
+    color: var(--lucky);
+    font-weight: 600;
+  }
+  .btn-export:hover { background: #4ec9f422; }
+
+  /* ── Info box ── */
+  .info { padding: 10px 14px; background: var(--surface2); border-left: 3px solid var(--accent); border-radius: 0 var(--radius) var(--radius) 0; font-size: 12px; color: var(--text2); line-height: 1.7; margin-top: 10px; }
+
+  /* ── Count cards ── */
+  .count-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+  .count-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; text-align: center; }
+  .count-label { font-size: 11px; margin-bottom: 10px; }
+  .count-special .count-label { color: var(--special); }
+  .count-lucky .count-label { color: var(--lucky); }
+  .count-reserve .count-label { color: var(--reserve); }
+
+  /* ── Tags ── */
+  .tag-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 100px; padding: 3px 10px 3px 12px;
+    font-size: 12px; color: var(--text2);
+  }
+  .tag-x {
+    background: none; border: none; cursor: pointer;
+    color: var(--text3); font-size: 14px; padding: 0; line-height: 1;
+    transition: color .15s;
+  }
+  .tag-x:hover { color: var(--danger); }
+
+  /* ── Agent group ── */
+  .agent-group {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px; margin-bottom: 10px;
+  }
+  .agent-group-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .agent-group-label { font-size: 13px; font-weight: 500; color: var(--text2); }
+
+  /* ── Table ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 12px; font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--text2); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+  .td-name { color: var(--text); font-weight: 500; }
+  .td-aid { font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+  .td-img { width: 36px; height: 36px; border-radius: 6px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text3); overflow: hidden; }
+  .td-img img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* ── Badge ── */
+  .badge {
+    display: inline-block; padding: 2px 10px; border-radius: 100px;
+    font-size: 11px; font-family: 'IBM Plex Mono', monospace;
+  }
+  .badge-special { background: #f4a94e22; color: var(--special); border: 1px solid #f4a94e44; }
+  .badge-lucky { background: #4ec9f422; color: var(--lucky); border: 1px solid #4ec9f444; }
+  .badge-reserve { background: #78d47e22; color: var(--reserve); border: 1px solid #78d47e44; }
+
+  /* ── Score bar ── */
+  .score-wrap { display: flex; align-items: center; gap: 8px; }
+  .score-bar { height: 4px; border-radius: 2px; background: var(--accent); display: inline-block; }
+  .score-num { font-size: 12px; font-family: 'IBM Plex Mono', monospace; color: var(--text); }
+
+  /* ── Footer actions ── */
+  .page-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+
+  /* ── Loading overlay ── */
+  .loading-overlay {
+    display: none; position: fixed; inset: 0;
+    background: #0f0f13cc; backdrop-filter: blur(4px);
+    z-index: 999; align-items: center; justify-content: center;
+    flex-direction: column; gap: 16px;
+  }
+  .loading-overlay.show { display: flex; }
+  .spinner {
+    width: 36px; height: 36px; border: 2px solid var(--border2);
+    border-top-color: var(--accent2); border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 14px; color: var(--text2); font-family: 'IBM Plex Mono', monospace; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: var(--radius); padding: 12px 18px;
+    font-size: 13px; color: var(--text2);
+    transform: translateY(80px); opacity: 0;
+    transition: transform .3s, opacity .3s;
+    z-index: 1000;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: #78d47e44; color: var(--reserve); }
+  .toast.error { border-color: #f46e6e44; color: var(--danger); }
+
+  /* ── Empty state ── */
+  .empty { text-align: center; padding: 40px; color: var(--text3); font-size: 13px; }
+
+  /* ── Result header ── */
+  .result-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px;
+  }
+  .result-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ── Section header in result ── */
+  .section-head {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 14px;
+  }
+  .section-line { flex: 1; height: 1px; background: var(--border); }
+
+  /* ── Reserve row ── */
+  tr.reserve-row td { opacity: .45; font-style: italic; }
+  tr.reserve-row.promoted td { opacity: 1; font-style: normal; animation: highlight .6s ease; }
+  @keyframes highlight { from { background: #78d47e22; } to { background: transparent; } }
+
+  /* ── Webhook URL display ── */
+  .webhook-url {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; color: var(--accent2);
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 10px 14px;
+    word-break: break-all;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ── Nav ── -->
+<nav>
+  <div class="nav-logo">lucky_draw.exe</div>
+  <button class="nav-btn active" onclick="goPage('input')">ใส่ข้อมูล</button>
+  <button class="nav-btn" onclick="goPage('result')">สรุปผล</button>
+  <button class="nav-btn" onclick="goPage('settings')">ตั้งค่า</button>
+  <div class="nav-spacer"></div>
+  <div class="nav-status" id="nav-status">ยังไม่ได้โหลดข้อมูล</div>
+</nav>
+
+<!-- ── Loading overlay ── -->
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">กำลังประมวลผล...</div>
+</div>
+
+<!-- ── Toast ── -->
+<div class="toast" id="toast"></div>
+
+<!-- ════════════════════════════════
+     PAGE: INPUT
+════════════════════════════════ -->
+<div class="page active" id="page-input">
+
+  <!-- Webhook URL (แก้ตรงนี้) -->
+  <div class="card" style="border-color:#7c6fcd44">
+    <div class="card-title">⚙ การตั้งค่าการเชื่อมต่อ n8n</div>
+    <label>Webhook URL (คัดลอกมาจาก n8n)</label>
+    <input type="text" id="webhook-url" placeholder="https://n8n-external.exservice.io/webhook/lucky-draw" value="">
+    <div class="info">วิธีหา URL: เปิด n8n → คลิกที่ Webhook Node → ดูที่ช่อง "Webhook URL" ด้านขวา แล้ว copy มาวางที่นี่</div>
+  </div>
+
+  <!-- Data source -->
+  <div class="card">
+    <div class="card-title">📊 แหล่งข้อมูล</div>
+    <label>ลิงก์ Google Sheet</label>
+    <div class="row">
+      <input type="text" id="sheet-url" placeholder="https://docs.google.com/spreadsheets/d/...">
+    </div>
+    <div class="divider">หรือ</div>
+    <label>อัปโหลดไฟล์ .xlsx</label>
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+      <input type="file" id="file-input" accept=".xlsx,.xls" onchange="handleFile(this)">
+      <span class="upload-icon">📂</span>
+      คลิกเพื่อเลือกไฟล์ .xlsx<br>
+      <span style="font-size:11px;margin-top:4px;display:block;color:var(--text3)">รองรับ .xlsx และ .xls</span>
+    </div>
+  </div>
+
+  <!-- Method -->
+  <div class="card">
+    <div class="card-title">🎯 วิธีการคัดเลือกผู้โชคดี</div>
+    <div class="method-grid">
+      <div class="method-card selected" onclick="selectMethod('like',this)">
+        <span class="m-icon">👍</span>
+        <div class="m-title">ถูกใจทีมงาน</div>
+        <div class="m-desc">Special: สุ่มแบบ Random<br>Lucky Draw: สุ่ม Random</div>
+      </div>
+      <div class="method-card" onclick="selectMethod('answer',this)">
+        <span class="m-icon">⚡</span>
+        <div class="m-title">ตอบถูกตอบไว</div>
+        <div class="m-desc">Special: ถูก+เร็วสุด<br>Lucky Draw: ถูก+สุ่ม</div>
+      </div>
+      <div class="method-card" onclick="selectMethod('cap',this)">
+        <span class="m-icon">📸</span>
+        <div class="m-title">แคปถูกแคปไว</div>
+        <div class="m-desc">Special: มีรูป+เร็วสุด<br>Lucky Draw: มีรูป+สุ่ม</div>
+      </div>
+    </div>
+
+    <!-- ช่องคำตอบ (แสดงเฉพาะโหมด answer) -->
+    <div class="answer-box" id="answer-box">
+      <label>คำตอบที่ถูกต้อง</label>
+      <input type="text" id="correct-answer" placeholder="พิมพ์คำตอบที่ถูกต้อง...">
+    </div>
+  </div>
+
+  <!-- Rules -->
+  <div class="card">
+    <div class="card-title">📋 วิธีการเล่นกิจกรรม</div>
+    <textarea id="rules" placeholder="อธิบายวิธีการเล่นกิจกรรม เช่น &#10;- กดถูกใจโพสต์&#10;- แสดงความคิดเห็นสร้างสรรค์&#10;- แคปหน้าจอและส่งในคอมเมนต์&#10;&#10;ข้อมูลนี้ใช้สำหรับประกอบการคัดเลือก"></textarea>
+  </div>
+
+  <div class="page-actions">
+    <button class="btn" onclick="resetInput()">รีเซ็ต</button>
+    <button class="btn btn-primary" id="btn-start" onclick="startProcess()">เริ่มคัดเลือก →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     PAGE: RESULT
+════════════════════════════════ -->
+<div class="page" id="page-result">
+
+  <div class="result-header">
+    <div class="result-badges" id="result-badges">
+      <span class="badge badge-special" id="badge-special">Special 0 คน</span>
+      <span class="badge badge-lucky" id="badge-lucky">Lucky Draw 0 คน</span>
+      <span class="badge badge-reserve" id="badge-reserve">สำรอง 0 คน</span>
+    </div>
+    <button class="btn btn-export" onclick="exportXLSX()">Export .xlsx</button>
+  </div>
+
+  <!-- Special table -->
+  <div class="card" id="card-special">
+    <div class="section-head">
+      <span class="badge badge-special">Special</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="table-wrap">
+      <table id="table-special">
+        <thead id="head-special"></thead>
+        <tbody id="body-special"></tbody>
+      </table>
+      <div class="empty" id="empty-special" style="display:none">ยังไม่มีข้อมูล</div>
+    </div>
+  </div>
+
+  <!-- Lucky table -->
+  <div class="card" id="card-lucky">
+    <div class="section-head">
+      <span class="badge badge-lucky">Lucky Draw</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="table-wrap">
+      <table id="table-lucky">
+        <thead id="head-lucky"></thead>
+        <tbody id="body-lucky"></tbody>
+      </table>
+      <div class="empty" id="empty-lucky" style="display:none">ยังไม่มีข้อมูล</div>
+    </div>
+  </div>
+
+  <!-- Reserve (hidden by default, shown when needed) -->
+  <div class="card" id="card-reserve" style="display:none">
+    <div class="section-head">
+      <span class="badge badge-reserve">รายชื่อสำรอง</span>
+      <div class="section-line"></div>
+      <span style="font-size:12px;color:var(--text3)">จะถูกดึงขึ้นอัตโนมัติเมื่อลบรายชื่อหลัก</span>
+    </div>
+    <div class="table-wrap">
+      <table id="table-reserve">
+        <thead id="head-reserve"></thead>
+        <tbody id="body-reserve"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="empty" id="result-empty">
+    กดปุ่ม "เริ่มคัดเลือก" ที่หน้าใส่ข้อมูลก่อนนะครับ
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     PAGE: SETTINGS
+════════════════════════════════ -->
+<div class="page" id="page-settings">
+
+  <!-- Count -->
+  <div class="card">
+    <div class="card-title">🏆 จำนวนผู้โชคดี</div>
+    <div class="count-grid">
+      <div class="count-card count-special">
+        <div class="count-label">Special</div>
+        <input type="number" id="cnt-special" value="3" min="0" max="100">
+      </div>
+      <div class="count-card count-lucky">
+        <div class="count-label">Lucky Draw</div>
+        <input type="number" id="cnt-lucky" value="5" min="0" max="100">
+      </div>
+      <div class="count-card count-reserve">
+        <div class="count-label">สำรอง</div>
+        <input type="number" id="cnt-reserve" value="3" min="0" max="100">
+      </div>
+    </div>
+  </div>
+
+  <!-- Blacklist -->
+  <div class="card">
+    <div class="card-title">🚫 Blacklist</div>
+    <div class="row">
+      <input type="text" id="bl-input" placeholder="ใส่ชื่อ Facebook หรือ AID แล้วกด Enter" onkeydown="if(event.key==='Enter')addBlacklist()">
+      <button class="btn" onclick="addBlacklist()">เพิ่ม</button>
+    </div>
+    <div class="tag-wrap" id="bl-tags"></div>
+    <div class="info">รายชื่อใน Blacklist จะถูกตัดออกจากการคัดเลือกทุกกรณี</div>
+  </div>
+
+  <!-- Agent groups -->
+  <div class="card">
+    <div class="card-title">👥 กลุ่มตัวแทน (Agency Group)</div>
+    <div class="info" style="margin-bottom:14px">หากมีรายชื่อในกลุ่มเดียวกัน 2 คนขึ้นไปผ่านเงื่อนไข จะสุ่มเลือกเพียง 1 คน และไม่มีสิทธิ์รับรางวัล Special</div>
+    <div id="agent-groups"></div>
+    <button class="btn" style="width:100%;margin-top:4px" onclick="addAgentGroup()">+ เพิ่มกลุ่มใหม่</button>
+  </div>
+
+  <div class="page-actions">
+    <button class="btn" onclick="resetSettings()">รีเซ็ต</button>
+    <button class="btn btn-primary" onclick="saveSettings()">บันทึกการตั้งค่า</button>
+  </div>
+</div>
+
+</div><!-- .app -->
+
+<!-- SheetJS for export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+// ════════════════════════════
+// State
+// ════════════════════════════
+let currentMethod = 'like';
+let fileBase64 = null;
+let resultData = { special: [], lucky: [], reserve: [] };
+let agentGroupCount = 0;
+
+// ════════════════════════════
+// Navigation
+// ════════════════════════════
+function goPage(p) {
+  document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
+  document.getElementById('page-' + p).classList.add('active');
+  const idx = { input: 0, result: 1, settings: 2 }[p];
+  document.querySelectorAll('.nav-btn')[idx].classList.add('active');
+}
+
+// ════════════════════════════
+// Method selection
+// ════════════════════════════
+function selectMethod(type, el) {
+  currentMethod = type;
+  document.querySelectorAll('.method-card').forEach(x => x.classList.remove('selected'));
+  el.classList.add('selected');
+  const ab = document.getElementById('answer-box');
+  ab.classList.toggle('show', type === 'answer');
+}
+
+// ════════════════════════════
+// File upload
+// ════════════════════════════
+function handleFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const zone = document.getElementById('upload-zone');
+  const reader = new FileReader();
+  reader.onload = e => {
+    fileBase64 = e.target.result.split(',')[1];
+    zone.classList.add('has-file');
+    zone.innerHTML = `<span class="upload-icon">✅</span>${file.name}<br><span style="font-size:11px;color:var(--text3)">คลิกเพื่อเปลี่ยนไฟล์</span>
+      <input type="file" id="file-input" accept=".xlsx,.xls" onchange="handleFile(this)" style="display:none">`;
+    showToast('โหลดไฟล์สำเร็จ: ' + file.name, 'success');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ════════════════════════════
+// Settings helpers
+// ════════════════════════════
+function getSettings() {
+  return {
+    specialCount: parseInt(document.getElementById('cnt-special').value) || 3,
+    luckyCount:   parseInt(document.getElementById('cnt-lucky').value) || 5,
+    reserveCount: parseInt(document.getElementById('cnt-reserve').value) || 3,
+    blacklist: [...document.querySelectorAll('#bl-tags .tag')].map(t => t.dataset.val),
+    agentGroups: [...document.querySelectorAll('.agent-group')].map(g =>
+      [...g.querySelectorAll('.tag')].map(t => t.dataset.val)
+    ).filter(g => g.length > 0)
+  };
+}
+
+function addBlacklist() {
+  const inp = document.getElementById('bl-input');
+  const v = inp.value.trim();
+  if (!v) return;
+  addTag('bl-tags', v);
+  inp.value = '';
+}
+
+function addTag(containerId, val) {
+  const wrap = document.getElementById(containerId);
+  const tag = document.createElement('span');
+  tag.className = 'tag';
+  tag.dataset.val = val;
+  tag.innerHTML = `${val}<button class="tag-x" onclick="this.parentElement.remove()">×</button>`;
+  wrap.appendChild(tag);
+}
+
+function addAgentGroup() {
+  agentGroupCount++;
+  const div = document.createElement('div');
+  div.className = 'agent-group';
+  div.innerHTML = `
+    <div class="agent-group-head">
+      <span class="agent-group-label">กลุ่มที่ ${agentGroupCount}</span>
+      <button class="btn btn-sm btn-danger" onclick="this.closest('.agent-group').remove()">ลบกลุ่ม</button>
+    </div>
+    <div class="tag-wrap agent-tag-wrap"></div>
+    <div class="row" style="margin-top:10px">
+      <input type="text" placeholder="ชื่อ Facebook หรือ AID ของสมาชิก" onkeydown="if(event.key==='Enter'){addAgentMember(this);}" style="flex:1">
+      <button class="btn btn-sm" onclick="addAgentMember(this.previousElementSibling)">เพิ่ม</button>
+    </div>`;
+  document.getElementById('agent-groups').appendChild(div);
+}
+
+function addAgentMember(inp) {
+  const v = inp.value.trim();
+  if (!v) return;
+  const wrap = inp.closest('.agent-group').querySelector('.agent-tag-wrap');
+  const tag = document.createElement('span');
+  tag.className = 'tag';
+  tag.dataset.val = v;
+  tag.innerHTML = `${v}<button class="tag-x" onclick="this.parentElement.remove()">×</button>`;
+  wrap.appendChild(tag);
+  inp.value = '';
+}
+
+function saveSettings() {
+  localStorage.setItem('luckyDrawSettings', JSON.stringify(getSettings()));
+  showToast('บันทึกการตั้งค่าแล้ว', 'success');
+}
+
+function resetSettings() {
+  document.getElementById('cnt-special').value = 3;
+  document.getElementById('cnt-lucky').value = 5;
+  document.getElementById('cnt-reserve').value = 3;
+  document.getElementById('bl-tags').innerHTML = '';
+  document.getElementById('agent-groups').innerHTML = '';
+  agentGroupCount = 0;
+}
+
+function loadSavedSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem('luckyDrawSettings'));
+    if (!s) return;
+    if (s.specialCount) document.getElementById('cnt-special').value = s.specialCount;
+    if (s.luckyCount)   document.getElementById('cnt-lucky').value = s.luckyCount;
+    if (s.reserveCount) document.getElementById('cnt-reserve').value = s.reserveCount;
+  } catch(e) {}
+}
+
+// ════════════════════════════
+// Main process
+// ════════════════════════════
+async function startProcess() {
+  const webhookUrl = document.getElementById('webhook-url').value.trim();
+  if (!webhookUrl) { showToast('กรุณาใส่ Webhook URL ของ n8n ก่อนครับ', 'error'); return; }
+
+  const sheetUrl = document.getElementById('sheet-url').value.trim();
+  if (!sheetUrl && !fileBase64) { showToast('กรุณาใส่ลิงก์ Google Sheet หรืออัปโหลดไฟล์ .xlsx ก่อนครับ', 'error'); return; }
+
+  const payload = {
+    sheetUrl,
+    fileBase64,
+    method: currentMethod,
+    correctAnswer: document.getElementById('correct-answer').value.trim(),
+    rules: document.getElementById('rules').value.trim(),
+    settings: getSettings()
+  };
+
+  showLoading('กำลังส่งข้อมูลไปยัง n8n...');
+  try {
+    const res = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('n8n ตอบกลับ status ' + res.status);
+    const data = await res.json();
+    hideLoading();
+    resultData = data;
+    renderResults(data);
+    goPage('result');
+    updateStatus('ready');
+    showToast('คัดเลือกสำเร็จ! ✓', 'success');
+  } catch(e) {
+    hideLoading();
+    showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
+    console.error(e);
+  }
+}
+
+function resetInput() {
+  document.getElementById('sheet-url').value = '';
+  document.getElementById('rules').value = '';
+  document.getElementById('correct-answer').value = '';
+  fileBase64 = null;
+  const zone = document.getElementById('upload-zone');
+  zone.classList.remove('has-file');
+  zone.innerHTML = `<input type="file" id="file-input" accept=".xlsx,.xls" onchange="handleFile(this)" style="display:none">
+    <span class="upload-icon">📂</span>
+    คลิกเพื่อเลือกไฟล์ .xlsx<br>
+    <span style="font-size:11px;margin-top:4px;display:block;color:var(--text3)">รองรับ .xlsx และ .xls</span>`;
+  zone.onclick = () => document.getElementById('file-input').click();
+}
+
+// ════════════════════════════
+// Render results
+// ════════════════════════════
+function renderResults(data) {
+  const method = data.meta?.method || currentMethod;
+  const special = data.special || [];
+  const lucky   = data.lucky || [];
+  const reserve = data.reserve || [];
+
+  // Badges
+  document.getElementById('badge-special').textContent = `Special ${special.length} คน`;
+  document.getElementById('badge-lucky').textContent   = `Lucky Draw ${lucky.length} คน`;
+  document.getElementById('badge-reserve').textContent = `สำรอง ${reserve.length} คน`;
+
+  document.getElementById('result-empty').style.display = 'none';
+
+  // Headers by method
+  const headers = {
+    like:   ['#','ชื่อ Facebook','AID','คะแนน','เหตุผล','รูป',''],
+    answer: ['#','ชื่อ Facebook','AID','เวลา','รูป',''],
+    cap:    ['#','ชื่อ Facebook','AID','เวลา','รูป','']
+  };
+  const h = headers[method] || headers.like;
+
+  renderTable('special', special, h, method, reserve);
+  renderTable('lucky',   lucky,   h.filter(x => x !== 'คะแนน' && x !== 'เหตุผล'), method, []);
+
+  // Reserve card
+  if (reserve.length > 0) {
+    document.getElementById('card-reserve').style.display = 'block';
+    renderTable('reserve', reserve, h.filter(x => x !== 'คะแนน' && x !== 'เหตุผล'), method, []);
+  }
+}
+
+function renderTable(tableId, rows, headers, method, reserve) {
+  const thead = document.getElementById('head-' + tableId);
+  const tbody = document.getElementById('body-' + tableId);
+  const empty = document.getElementById('empty-' + tableId);
+
+  // Header
+  thead.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+
+  tbody.innerHTML = rows.map((r, i) => buildRow(r, i, headers, method, tableId, reserve)).join('');
+}
+
+function buildRow(r, i, headers, method, tableId, reserve) {
+  const hasScore  = headers.includes('คะแนน');
+  const hasReason = headers.includes('เหตุผล');
+  const hasTime   = headers.includes('เวลา');
+
+  const timeStr = r.timestamp ? new Date(r.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—';
+  const scoreVal = r.score !== undefined ? r.score : '—';
+  const scoreBar = (typeof r.score === 'number') ? `<div class="score-wrap"><div class="score-bar" style="width:${r.score}px;max-width:80px"></div><span class="score-num">${r.score}</span></div>` : scoreVal;
+  const imgCell  = r.imageUrl ? `<div class="td-img"><img src="${r.imageUrl}" alt="รูป" onerror="this.parentElement.textContent='—'"></div>` : `<div class="td-img">—</div>`;
+
+  let cells = `<td>${i + 1}</td><td class="td-name">${r.name || '—'}</td><td class="td-aid">${r.aid || '—'}</td>`;
+  if (hasScore)  cells += `<td>${scoreBar}</td>`;
+  if (hasReason) cells += `<td style="font-size:12px;max-width:160px;color:var(--text2)">${r.reason || '—'}</td>`;
+  if (hasTime)   cells += `<td style="font-family:'IBM Plex Mono',monospace;font-size:12px">${timeStr}</td>`;
+  cells += `<td>${imgCell}</td>`;
+
+  const canDelete = tableId === 'special' || tableId === 'lucky';
+  const delBtn = canDelete
+    ? `<td><button class="btn btn-sm btn-danger" onclick="removeRow('${tableId}',${i})">ลบ</button></td>`
+    : '<td></td>';
+
+  return `<tr data-idx="${i}">${cells}${delBtn}</tr>`;
+}
+
+// ════════════════════════════
+// Remove row + promote reserve
+// ════════════════════════════
+function removeRow(tableId, idx) {
+  const arr = resultData[tableId];
+  arr.splice(idx, 1);
+
+  // ดึงสำรองขึ้นมาถ้ามี
+  if (resultData.reserve.length > 0) {
+    const promoted = resultData.reserve.shift();
+    resultData[tableId].push({ ...promoted, _promoted: true });
+    showToast(`ดึง "${promoted.name}" จากสำรองขึ้นมาแทน`, 'success');
+  }
+
+  renderResults({ ...resultData, meta: { method: currentMethod } });
+
+  // อัปเดต badge สำรอง
+  document.getElementById('badge-reserve').textContent = `สำรอง ${resultData.reserve.length} คน`;
+  if (resultData.reserve.length === 0) {
+    document.getElementById('card-reserve').style.display = 'none';
+  }
+}
+
+// ════════════════════════════
+// Export XLSX
+// ════════════════════════════
+function exportXLSX() {
+  if (!window.XLSX) { showToast('ไม่พบ library สำหรับ export', 'error'); return; }
+
+  const wb = XLSX.utils.book_new();
+
+  const toSheet = (arr, label) => arr.map((r, i) => ({
+    'ลำดับ': i + 1, 'ประเภท': label,
+    'ชื่อ Facebook': r.name, 'AID': r.aid,
+    'คะแนน': r.score ?? '', 'เหตุผล': r.reason ?? '',
+    'เวลา': r.timestamp ? new Date(r.timestamp).toLocaleString('th-TH') : '',
+    'รูปภาพ': r.imageUrl ?? ''
+  }));
+
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(toSheet(resultData.special, 'Special')),    'Special');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(toSheet(resultData.lucky,   'Lucky Draw')), 'Lucky Draw');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(toSheet(resultData.reserve, 'สำรอง')),      'สำรอง');
+
+  const date = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `lucky-draw-result-${date}.xlsx`);
+  showToast('Export สำเร็จแล้วครับ', 'success');
+}
+
+// ════════════════════════════
+// UI helpers
+// ════════════════════════════
+function showLoading(text) {
+  document.getElementById('loading-text').textContent = text || 'กำลังประมวลผล...';
+  document.getElementById('loading').classList.add('show');
+}
+function hideLoading() {
+  document.getElementById('loading').classList.remove('show');
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (type || '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function updateStatus(state) {
+  const el = document.getElementById('nav-status');
+  if (state === 'ready') { el.textContent = 'พร้อมใช้งาน'; el.classList.add('ready'); }
+  else { el.textContent = 'ยังไม่ได้โหลดข้อมูล'; el.classList.remove('ready'); }
+}
+
+// ════════════════════════════
+// Init
+// ════════════════════════════
+loadSavedSettings();
+</script>
+</body>
+</html>
