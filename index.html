@@ -705,10 +705,12 @@ async function startProcess() {
   showLoading('กำลังส่งข้อมูลไปยัง n8n...');
   try {
     const res = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+  method: 'POST',
+  headers: { 
+    'Content-Type': 'text/plain'  // เปลี่ยนจาก application/json
+  },
+  body: JSON.stringify(payload)
+});
     if (!res.ok) throw new Error('n8n ตอบกลับ status ' + res.status);
     const data = await res.json();
     hideLoading();
