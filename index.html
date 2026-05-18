@@ -586,14 +586,29 @@ function updateUploadZone(name, count) {
 }
 
 function autoGuess(field) {
-  const patterns = {
-    name:      ['facebook user', 'name', 'facebook', 'ชื่อ', 'fb', 'display'],
-    aid:       ['aid-2', 'aid', 'id', 'รหัส'],
-    comment:   ['comment', 'ความคิดเห็น', 'คอมเมนต์', 'ข้อความ', 'message', 'text'],
-    timestamp: ['comment time', 'on time', 'time', 'เวลา', 'timestamp', 'date', 'วัน', 'datetime', 'created'],
+  const exact = {
+    name:      ['Facebook User', 'Name'],
+    aid:       ['AID-2', 'AID'],
+    comment:   ['Comment'],
+    timestamp: ['Comment Time', 'On Time'],
+    image:     ['Comment URL', 'Image'],
+  };
+  const fuzzy = {
+    name:      ['facebook user', 'name', 'facebook', 'ชื่อ', 'fb'],
+    aid:       ['aid-2', 'aid', 'รหัส'],
+    comment:   ['comment', 'ความคิดเห็น', 'message', 'text'],
+    timestamp: ['comment time', 'on time', 'time', 'เวลา', 'timestamp', 'date'],
     image:     ['comment url', 'image', 'รูป', 'photo', 'pic', 'img', 'url'],
   };
-  return allColumns.find(c => (patterns[field]||[]).some(p => c.toLowerCase().includes(p))) || '(ไม่มี)';
+  // ลอง exact match ก่อน (ตรงเป๊ะ case-insensitive)
+  const exactMatch = allColumns.find(c =>
+    (exact[field]||[]).some(p => c.toLowerCase() === p.toLowerCase())
+  );
+  if (exactMatch) return exactMatch;
+  // ถ้าไม่เจอ ค่อย fuzzy match
+  return allColumns.find(c =>
+    (fuzzy[field]||[]).some(p => c.toLowerCase().includes(p.toLowerCase()))
+  ) || '(ไม่มี)';
 }
 
 function renderColMapper() {
