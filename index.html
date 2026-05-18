@@ -587,10 +587,10 @@ function updateUploadZone(name, count) {
 
 function autoGuess(field) {
   const patterns = {
-    name:['facebook','ชื่อ','name','fb','display'],
-    aid:['aid','id','รหัส'],
+    name:['name','facebook','ชื่อ','fb','display'],
+    aid:['aid-2','aid','id','รหัส'],
     comment:['comment','ความคิดเห็น','คอมเมนต์','ข้อความ','message','text'],
-    timestamp:['time','เวลา','timestamp','date','วัน','datetime','created'],
+    timestamp:['comment time','time','เวลา','timestamp','date','วัน','datetime','created'],
     image:['image','รูป','photo','pic','img','url'],
   };
   return allColumns.find(c => (patterns[field]||[]).some(p => c.toLowerCase().includes(p))) || '(ไม่มี)';
